@@ -1,0 +1,254 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  release:
+    types: [ created ]
+
+jobs:
+  build-linux:
+    name: Build Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-22.04
+            cmake_arch: x64
+          - arch: arm64
+            runner: ubuntu-22.04
+            cmake_arch: arm64
+          - arch: arm
+            runner: ubuntu-22.04
+            cmake_arch: arm
+          - arch: x86
+            runner: ubuntu-22.04
+            cmake_arch: x86
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake clang ninja-build
+        if [ "${{ matrix.arch }}" = "arm64" ]; then
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+        elif [ "${{ matrix.arch }}" = "arm" ]; then
+          sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+        elif [ "${{ matrix.arch }}" = "x86" ]; then
+          sudo apt-get install -y gcc-multilib g++-multilib
+        fi
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        if [ "${{ matrix.arch }}" = "x64" ] || [ "${{ matrix.arch }}" = "x86" ]; then
+          CC=clang CXX=clang++ cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+            -G Ninja
+        else
+          CC=clang CXX=clang++ cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake_arch }} \
+            -G Ninja
+        fi
+    
+    - name: Build
+      run: |
+        cd build
+        ninja
+        ninja install
+    
+    - name: Create tarball
+      run: |
+        cd bin
+        tar czf ../netcoredbg-linux-${{ matrix.arch }}.tar.gz *
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: netcoredbg-linux-${{ matrix.arch }}
+        path: netcoredbg-linux-${{ matrix.arch }}.tar.gz
+        retention-days: 30
+
+  build-linux-riscv64:
+    name: Build Linux RISC-V 64
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake clang ninja-build gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        CC=clang CXX=clang++ cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+          -DCMAKE_SYSTEM_NAME=Linux \
+          -DCMAKE_SYSTEM_PROCESSOR=riscv64 \
+          -G Ninja
+    
+    - name: Build
+      run: |
+        cd build
+        ninja
+        ninja install
+    
+    - name: Create tarball
+      run: |
+        cd bin
+        tar czf ../netcoredbg-linux-riscv64.tar.gz *
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: netcoredbg-linux-riscv64
+        path: netcoredbg-linux-riscv64.tar.gz
+        retention-days: 30
+
+  build-macos:
+    name: Build macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-13
+          - arch: arm64
+            runner: macos-14
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Install dependencies
+      run: |
+        brew install cmake ninja
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        CC=clang CXX=clang++ cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+          -G Ninja
+    
+    - name: Build
+      run: |
+        cd build
+        ninja
+        ninja install
+    
+    - name: Create tarball
+      run: |
+        cd bin
+        tar czf ../netcoredbg-osx-${{ matrix.arch }}.tar.gz *
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: netcoredbg-osx-${{ matrix.arch }}
+        path: netcoredbg-osx-${{ matrix.arch }}.tar.gz
+        retention-days: 30
+
+  build-windows:
+    name: Build Windows ${{ matrix.arch }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            platform: x64
+          - arch: x86
+            platform: Win32
+          - arch: arm64
+            platform: ARM64
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. `
+          -G "Visual Studio 17 2022" `
+          -A ${{ matrix.platform }} `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DCMAKE_INSTALL_PREFIX="$PWD\..\bin"
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release --target install
+    
+    - name: Create archive
+      run: |
+        cd bin
+        Compress-Archive -Path * -DestinationPath ..\netcoredbg-win-${{ matrix.arch }}.zip
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: netcoredbg-win-${{ matrix.arch }}
+        path: netcoredbg-win-${{ matrix.arch }}.zip
+        retention-days: 30
+
+  create-release:
+    name: Create Release
+    if: github.event_name == 'release'
+    needs: [build-linux, build-linux-riscv64, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v2
+      with:
+        files: artifacts/**/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

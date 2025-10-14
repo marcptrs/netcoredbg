@@ -50,3 +50,6 @@ tags
 
 # netcoregdb's command history
 .netcoredbg_hist
+
+# Release archives
+releases/
