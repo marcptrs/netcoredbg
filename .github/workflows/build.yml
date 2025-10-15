@@ -53,15 +53,23 @@ jobs:
       run: |
         mkdir build
         cd build
-        if [ "${{ matrix.arch }}" = "x64" ] || [ "${{ matrix.arch }}" = "x86" ]; then
+        if [ "${{ matrix.arch }}" = "x64" ]; then
           CC=clang CXX=clang++ cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+            -G Ninja
+        elif [ "${{ matrix.arch }}" = "x86" ]; then
+          CC=clang CXX=clang++ cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+            -DCLR_CMAKE_HOST_ARCH=x86 \
             -G Ninja
         else
           CC=clang CXX=clang++ cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+            -DCLR_CMAKE_TARGET_ARCH=${{ matrix.arch }} \
+            -DCLR_CROSS_COMPONENTS_BUILD=1 \
             -DCMAKE_SYSTEM_NAME=Linux \
             -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake_arch }} \
             -G Ninja
@@ -109,6 +117,8 @@ jobs:
         CC=clang CXX=clang++ cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+          -DCLR_CMAKE_TARGET_ARCH=riscv64 \
+          -DCLR_CROSS_COMPONENTS_BUILD=1 \
           -DCMAKE_SYSTEM_NAME=Linux \
           -DCMAKE_SYSTEM_PROCESSOR=riscv64 \
           -G Ninja
