@@ -59,19 +59,28 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
             -G Ninja
         elif [ "${{ matrix.arch }}" = "x86" ]; then
-          CC=clang CXX=clang++ cmake .. \
+          CFLAGS="-m32" CXXFLAGS="-m32" CC=clang CXX=clang++ cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
             -DCLR_CMAKE_HOST_ARCH=x86 \
             -G Ninja
-        else
-          CC=clang CXX=clang++ cmake .. \
+        elif [ "${{ matrix.arch }}" = "arm64" ]; then
+          CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
-            -DCLR_CMAKE_TARGET_ARCH=${{ matrix.arch }} \
+            -DCLR_CMAKE_TARGET_ARCH=arm64 \
             -DCLR_CROSS_COMPONENTS_BUILD=1 \
             -DCMAKE_SYSTEM_NAME=Linux \
-            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake_arch }} \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -G Ninja
+        elif [ "${{ matrix.arch }}" = "arm" ]; then
+          CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
+            -DCLR_CMAKE_TARGET_ARCH=arm \
+            -DCLR_CROSS_COMPONENTS_BUILD=1 \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=armv7l \
             -G Ninja
         fi
     
@@ -114,7 +123,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        CC=clang CXX=clang++ cmake .. \
+        CC=riscv64-linux-gnu-gcc CXX=riscv64-linux-gnu-g++ cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=$PWD/../bin \
           -DCLR_CMAKE_TARGET_ARCH=riscv64 \
