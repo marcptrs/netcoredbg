@@ -6,6 +6,9 @@
 #ifdef WIN32
 #pragma once
 #include <cstddef>
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 
 namespace netcoredbg

@@ -20,6 +20,11 @@ if (NOT WIN32)
     target_compile_options(corguids PRIVATE -Wno-unused-parameter)
     target_include_directories(corguids PRIVATE ${CORECLR_SRC_DIR}/pal/inc ${CORECLR_SRC_DIR}/pal/inc/rt)
     target_include_directories(corguids PRIVATE ${CORECLR_SRC_DIR}/inc ${CORECLR_SRC_DIR}/debug/inc)
+else()
+    # Windows ARM64 requires intrin.h to be included before windows.h
+    if(CLR_CMAKE_PLATFORM_ARCH_ARM64)
+        target_compile_options(corguids PRIVATE /FI"intrin.h")
+    endif()
 endif()
 
 # Include coreclr headers
@@ -208,6 +213,10 @@ if (WIN32)
     target_link_libraries(netcoredbg corguids wsock32 ws2_32 linenoise)
 else()
     target_link_libraries(netcoredbg corguids dl pthread linenoise)
+    # RISC-V requires linking with libatomic for atomic operations
+    if(CLR_CMAKE_PLATFORM_ARCH_RISCV64)
+        target_link_libraries(netcoredbg atomic)
+    endif()
 endif()
 
 if (NCDB_DOTNET_STARTUP_HOOK)

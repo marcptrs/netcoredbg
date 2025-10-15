@@ -5,6 +5,9 @@
 /// required to work with dynamically loading libraries.
 
 #ifdef WIN32
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 #include "utils/dynlibs.h"
 #include "utils/limits.h"

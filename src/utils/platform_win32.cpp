@@ -5,6 +5,9 @@
 /// for functions defined in platform.h
 
 #ifdef WIN32
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 #include <stdlib.h>  // char **environ
 #include "utils/platform.h"

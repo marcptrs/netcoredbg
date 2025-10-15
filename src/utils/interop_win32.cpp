@@ -8,6 +8,9 @@
 /// \file interop_win32.h  This file contains windows-specific functions for Interop class defined in interop.h
 
 #ifdef WIN32
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 #include <stddef.h>
 #include <string.h>

@@ -6,6 +6,9 @@
 #ifdef _WIN32
 #pragma once
 #include <winsock2.h>
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h> // TODO
 #include <assert.h>
 #include <tuple>

@@ -20,6 +20,9 @@
 #include "utils/limits.h"
 
 #ifdef _WIN32
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 #endif
 

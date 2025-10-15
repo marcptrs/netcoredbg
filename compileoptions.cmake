@@ -61,6 +61,12 @@ if (CLR_CMAKE_PLATFORM_UNIX)
   # as x64 does. It has been causing issues in ARM (https://github.com/dotnet/coreclr/issues/4746)
   add_compile_options(-fsigned-char)
 
+  # RISC-V requires linking with libatomic for atomic operations
+  if(CLR_CMAKE_PLATFORM_ARCH_RISCV64)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -latomic")
+  endif()
+
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Walign-cast -Wstrict-aliasing -Wno-unused-parameter -Wnarrowing)
   else()

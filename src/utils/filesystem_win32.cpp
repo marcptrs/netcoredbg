@@ -5,6 +5,9 @@
 /// This file contains definitions of windows-specific functions related to file system.
 
 #ifdef WIN32
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 #include <string>
 #include "utils/filesystem.h"

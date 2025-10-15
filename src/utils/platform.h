@@ -6,6 +6,10 @@
 
 #pragma once
 
+#if defined(_WIN32) && defined(_M_ARM64)
+#include <intrin.h>
+#endif
+
 // TODO replace in code, remove this macros
 #ifdef _MSC_VER
 #define W(s) L##s

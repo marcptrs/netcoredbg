@@ -27,6 +27,9 @@
 #ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
+#if defined(_M_ARM64)
+#include <intrin.h>
+#endif
 #include <windows.h>
 #define PATH_MAX MAX_PATH
 static void setenv(const char* var, const char* val, int) { _putenv_s(var, val); }
